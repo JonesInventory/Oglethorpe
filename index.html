@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furniture Gallery</title>
+    <style>
+        :root {
+            --color-bg-base: #0f172a;
+            --color-bg-elevated: #020617;
+            --color-bg-surface: #1e293b;
+            --color-bg-muted: #334155;
+            --color-text-primary: #f1f5f9;
+            --color-text-secondary: #cbd5e1;
+            --color-text-muted: #94a3b8;
+            --color-text-accent: #38bdf8;
+            --color-primary: #38bdf8;
+            --color-primary-hover: #0284c7;
+            --color-border: rgba(203, 213, 225, 0.2);
+            --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --color-bg-base: #ffffff;
+                --color-bg-elevated: #f8fafc;
+                --color-bg-surface: #f1f5f9;
+                --color-bg-muted: #e2e8f0;
+                --color-text-primary: #0f172a;
+                --color-text-secondary: #475569;
+                --color-text-muted: #64748b;
+                --color-text-accent: #0284c7;
+                --color-primary: #0284c7;
+                --color-primary-hover: #0369a1;
+                --color-border: rgba(148, 163, 184, 0.3);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-accent);
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            color: var(--color-text-secondary);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: var(--color-bg-muted);
+            color: var(--color-text-primary);
+        }
+
+        .tab.active {
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--color-bg-surface);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+            background: var(--color-bg-muted);
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            cursor: zoom-out;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: #f1f5f9;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--color-primary);
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+        }
+
+        .zoom-btn {
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-text-primary);
+        }
+
+        .text-field {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--color-bg-base);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text-primary);
+            font-size: 0.9rem;
+            font-family: var(--font-family-base);
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 0.75rem;
+        }
+
+        .text-field:focus {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .card-description {
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--color-bg-muted);
+            color: var(--color-text-accent);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+        }
+
+        .action-btn:hover {
+            background: var(--color-bg-muted);
+            transform: translateY(-1px);
+        }
+
+        .action-btn.selected {
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border-color: var(--color-primary);
+        }
+
+        .results-table {
+            margin-top: 2rem;
+            overflow-x: auto;
+        }
+
+        .results-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-bg-surface);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .results-table th {
+            background: var(--color-bg-muted);
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .results-table td {
+            color: var(--color-text-secondary);
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .decision-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .decision-store {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .decision-donate {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .decision-consign {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .export-controls {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: var(--color-bg-surface);
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+        }
+
+        .user-input-group {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .user-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            background: var(--color-bg-base);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text-primary);
+            font-size: 0.95rem;
+        }
+
+        .user-input:focus {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .current-user {
+            color: var(--color-text-accent);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .info-text {
+            color: var(--color-text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .export-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .export-btn:hover {
+            background: var(--color-primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .export-btn.secondary {
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+        }
+
+        .export-btn.secondary:hover {
+            background: var(--color-bg-muted);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .decision-by {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .gallery {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .tabs {
+                gap: 0.25rem;
+            }
+
+            .tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="imageModal" class="modal" onclick="closeModal(event)">
+        <span class="modal-close" onclick="closeModal(event)">&times;</span>
+        <img id="modalImage" class="modal-content" src="" alt="">
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="event.stopPropagation(); zoomOut()">-</button>
+            <button class="zoom-btn" onclick="event.stopPropagation(); resetZoom()">Reset</button>
+            <button class="zoom-btn" onclick="event.stopPropagation(); zoomIn()">+</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Furniture Collection</h1>
+        <p class="subtitle">Browse our curated collection of antique and modern furniture pieces</p>
+
+        <div class="export-controls">
+            <div class="user-input-group">
+                <label for="userName" style="color: var(--color-text-primary); font-weight: 500;">Your Name:</label>
+                <input type="text" id="userName" class="user-input" placeholder="Enter your name" />
+                <span class="current-user" id="currentUserDisplay"></span>
+            </div>
+            <div class="export-buttons">
+                <button class="export-btn" onclick="exportToCSV()">📥 Export to CSV</button>
+                <button class="export-btn" onclick="downloadTemplateCSV()">📄 Download Template CSV</button>
+                <label for="csvFileInput" class="export-btn secondary">📤 Import from CSV</label>
+                <input type="file" id="csvFileInput" class="file-input" accept=".csv" onchange="importFromCSV(event)" />
+            </div>
+            <p class="info-text">💡 Tip: Download the template CSV to see the correct format. Fill it with your items and import to bulk add furniture to the gallery.</p>
+        </div>
+
+        <div class="tabs" id="tabs"></div>
+
+        <div class="gallery" id="gallery"></div>
+    </div>
+
+    <script>
+        const decisions = {};
+        let currentUser = '';
+
+        const userNameInput = document.getElementById('userName');
+        const currentUserDisplay = document.getElementById('currentUserDisplay');
+
+        userNameInput.addEventListener('input', (e) => {
+            currentUser = e.target.value.trim();
+            updateCurrentUserDisplay();
+        });
+
+        function updateCurrentUserDisplay() {
+            if (currentUser) {
+                currentUserDisplay.textContent = `Logged in as: ${currentUser}`;
+            } else {
+                currentUserDisplay.textContent = '';
+            }
+        }
+
+        function downloadTemplateCSV() {
+            const headers = [
+                'ID', 'Title', 'Category', 'Era', 'Description',
+                'Prior Install Location', 'Dimensions', 'Finish',
+                'Location in Warehouse', 'Additional Details',
+                'Decision', 'Decided By', 'Image URL'
+            ];
+
+            let csvContent = headers.join(',') + '\n';
+            
+            csvContent += '14,"Sample Furniture Item","Storage","Contemporary","Description of the item goes here","Living Room","48\\"W x 24\\"D x 36\\"H","Natural wood finish","Section A, Row 1","Additional notes about the item","","","https://example.com/image.jpg"\n';
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'furniture-template.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToCSV() {
+            const headers = [
+                'ID', 'Title', 'Category', 'Era', 'Description',
+                'Prior Install Location', 'Dimensions', 'Finish',
+                'Location in Warehouse', 'Additional Details',
+                'Decision', 'Decided By', 'Image URL'
+            ];
+
+            let csvContent = headers.join(',') + '\n';
+
+            items.forEach(item => {
+                const decision = decisions[item.id] || { decision: '', decidedBy: '' };
+                const row = [
+                    item.id,
+                    `"${item.title}"`,
+                    item.category,
+                    item.era,
+                    `"${item.description}"`,
+                    `"${item.priorInstallLocation || ''}"`,
+                    `"${item.dimensions || ''}"`,
+                    `"${item.finish || ''}"`,
+                    `"${item.locationInWarehouse || ''}"`,
+                    `"${item.additionalDetails || ''}"`,
+                    `"${decision.decision || ''}"`,
+                    `"${decision.decidedBy || ''}"`,
+                    item.image
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `furniture-decisions-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                let newItemsAdded = 0;
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    const parts = lines[i].split(',');
+                    if (parts.length < 13) continue;
+                    
+                    const id = parseInt(parts[0]);
+                    const title = parts[1].replace(/^"|"$/g, '');
+                    const category = parts[2];
+                    const era = parts[3];
+                    const description = parts[4].replace(/^"|"$/g, '');
+                    const priorInstallLocation = parts[5].replace(/^"|"$/g, '');
+                    const dimensions = parts[6].replace(/^"|"$/g, '');
+                    const finish = parts[7].replace(/^"|"$/g, '');
+                    const locationInWarehouse = parts[8].replace(/^"|"$/g, '');
+                    const additionalDetails = parts[9].replace(/^"|"$/g, '');
+                    const decision = parts[10].replace(/^"|"$/g, '');
+                    const decidedBy = parts[11].replace(/^"|"$/g, '');
+                    const imageUrl = parts[12].trim();
+                    
+                    const existingIndex = items.findIndex(item => item.id === id);
+                    
+                    const itemData = {
+                        id: id,
+                        title: title,
+                        category: category,
+                        era: era,
+                        description: description,
+                        image: imageUrl,
+                        priorInstallLocation: priorInstallLocation,
+                        dimensions: dimensions,
+                        finish: finish,
+                        locationInWarehouse: locationInWarehouse,
+                        additionalDetails: additionalDetails
+                    };
+                    
+                    if (existingIndex !== -1) {
+                        items[existingIndex] = itemData;
+                    } else {
+                        items.push(itemData);
+                        newItemsAdded++;
+                    }
+                    
+                    if (decision) {
+                        decisions[id] = {
+                            decision: decision,
+                            decidedBy: decidedBy,
+                            timestamp: new Date().toISOString()
+                        };
+                    }
+                }
+                
+                const uniqueCategories = ['All', ...new Set(items.map(item => item.category))];
+                categories.length = 0;
+                categories.push(...uniqueCategories);
+                
+                renderTabs();
+                renderGallery();
+                renderResultsTable();
+                alert(`CSV imported successfully! ${newItemsAdded} new item(s) added.`);
+            };
+            reader.readAsText(file);
+        }
+
+        const items = [
+            {
+                id: 1,
+                title: 'Painted Wood Chest of Drawers',
+                category: 'Storage',
+                era: 'Circa 1750',
+                description: 'Antique painted chest with ornate floral scrollwork, two decorative drawers in yellow, pink, blue-green tones. Brass pulls, cabriole legs.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/84ba55fe-6d98-47e6-a225-30ce1ddf91f9',
+                priorInstallLocation: 'Master Bedroom',
+                dimensions: '36"W x 18"D x 42"H',
+                finish: 'Hand-painted floral design with original patina',
+                locationInWarehouse: 'Section A, Row 3, Shelf 2',
+                additionalDetails: 'Requires careful handling due to age. Original brass pulls intact.'
+            },
+            {
+                id: 2,
+                title: 'Wood Wardrobe with Geometric Panels',
+                category: 'Storage',
+                era: 'Contemporary',
+                description: 'Large oak wardrobe with geometric diamond panel doors, decorative carved molding, and long pull handles on solid base.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/4c650e14-d525-4670-948c-ab01c51a9c39',
+                priorInstallLocation: 'Guest Bedroom',
+                dimensions: '48"W x 24"D x 78"H',
+                finish: 'Natural oak with clear protective coating',
+                locationInWarehouse: 'Section B, Row 1, Floor',
+                additionalDetails: 'Heavy item - requires two people for moving. Shelves removable.'
+            },
+            {
+                id: 3,
+                title: 'Drop-Leaf Table',
+                category: 'Tables',
+                era: '19th Century',
+                description: 'Classic antique drop-leaf table in mahogany or walnut with hinged leaves, turned legs. Perfect space-saving dining or work table.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/01089503-c5a4-4d58-aa77-21b6e262310c',
+                priorInstallLocation: 'Dining Room',
+                dimensions: '42"W x 36"D x 30"H (leaves down: 12"W)',
+                finish: 'Mahogany stain with wax finish',
+                locationInWarehouse: 'Section C, Row 2, Table Stack',
+                additionalDetails: 'Both leaves functional. Minor scratches on top surface.'
+            },
+            {
+                id: 4,
+                title: 'White Chest of Drawers',
+                category: 'Storage',
+                era: 'Modern',
+                description: 'Contemporary white chest with six drawers, square brushed metal pulls, solid platform base. Clean minimalist design for modern spaces.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/45b75e7a-85e5-4e04-8a29-3eaf3268e5e4',
+                priorInstallLocation: 'Bedroom 2',
+                dimensions: '32"W x 16"D x 48"H',
+                finish: 'Matte white lacquer',
+                locationInWarehouse: 'Section A, Row 4, Shelf 1',
+                additionalDetails: 'All drawers glide smoothly. Hardware in excellent condition.'
+            },
+            {
+                id: 5,
+                title: 'White Pine Credenza with Cane Doors',
+                category: 'Storage',
+                era: 'Contemporary',
+                description: 'Modern white pine credenza with four cane webbing doors, brass handles, open base frame. Scandinavian-inspired design for media storage.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/b9b71233-646f-4fde-b7a5-a64c2ea123a7',
+                priorInstallLocation: 'Living Room',
+                dimensions: '72"W x 18"D x 32"H',
+                finish: 'White wash on pine with natural cane doors',
+                locationInWarehouse: 'Section D, Row 1, Floor',
+                additionalDetails: 'Cable management cutouts in back. Cane doors in perfect condition.'
+            },
+            {
+                id: 6,
+                title: 'Grey Upholstered Lounge Chair',
+                category: 'Seating',
+                era: 'Contemporary',
+                description: 'Modern lounge chair in grey-beige fabric with deep cushioning, padded arms, low back pillow. Solid platform base, relaxed proportions.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/93cd77e9-2518-49d1-9990-1882d594b99e',
+                priorInstallLocation: 'Den',
+                dimensions: '34"W x 36"D x 32"H',
+                finish: 'Grey-beige textured fabric upholstery',
+                locationInWarehouse: 'Section E, Row 2, Chair Area',
+                additionalDetails: 'Cushions included. Fabric professionally cleaned.'
+            },
+            {
+                id: 7,
+                title: 'Painted Wood Blanket Chest',
+                category: 'Storage',
+                era: '1771',
+                description: 'Rare antique painted blanket chest dated 1771 with floral bouquet panels, hinged lid, ball feet. Exceptional 18th-century folk art.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/e493159d-325a-4d2a-8a64-8458a52b78e5',
+                priorInstallLocation: 'Foyer',
+                dimensions: '40"W x 20"D x 24"H',
+                finish: 'Original hand-painted decoration dated 1771',
+                locationInWarehouse: 'Section F, Climate Controlled, Shelf 1',
+                additionalDetails: 'Museum-quality piece. Handle with extreme care. Original lock and key.'
+            },
+            {
+                id: 8,
+                title: 'Upholstered Striped Armchair',
+                category: 'Seating',
+                era: 'Vintage',
+                description: 'Classic upholstered armchair in green and beige striped fabric, rolled arms, high back, olive-green fringe trim. Traditional elegance.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/e11ee2e9-bc99-4ead-aadb-1c2d9f74343b',
+                priorInstallLocation: 'Study',
+                dimensions: '30"W x 32"D x 40"H',
+                finish: 'Green and beige striped fabric with fringe detail',
+                locationInWarehouse: 'Section E, Row 3, Chair Area',
+                additionalDetails: 'Reupholstered 5 years ago. Frame in excellent condition.'
+            },
+            {
+                id: 9,
+                title: 'Walters Wicker Set of Four Chairs',
+                category: 'Seating',
+                era: 'Contemporary',
+                description: 'Set of four modern wicker wingback armchairs in dark brown with light blue cushions. Tall curved backs, expert craftsmanship.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/b167d07a-b9d5-4af0-a5bb-de96a093a8a6',
+                priorInstallLocation: 'Sunroom',
+                dimensions: '28"W x 30"D x 45"H (each)',
+                finish: 'Dark brown wicker weave with blue cushions',
+                locationInWarehouse: 'Section G, Row 1, Set Storage',
+                additionalDetails: 'Sold as set of 4. Cushions included. Weather-resistant wicker.'
+            },
+            {
+                id: 10,
+                title: 'Patio Renaissance Wicker Armchairs',
+                category: 'Seating',
+                era: 'Contemporary',
+                description: 'Set of four natural woven wicker armchairs with blue button-tufted cushions, barrel back design. Herringbone pattern weaving detail.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/ff073a26-1873-447b-a329-7b24f2a24305',
+                priorInstallLocation: 'Patio',
+                dimensions: '26"W x 28"D x 38"H (each)',
+                finish: 'Natural wicker with herringbone pattern',
+                locationInWarehouse: 'Section G, Row 2, Set Storage',
+                additionalDetails: 'Set of 4. Button-tufted cushions removable. UV-resistant weave.'
+            },
+            {
+                id: 11,
+                title: 'Camel-Colored Three-Seat Sofa',
+                category: 'Seating',
+                era: 'Contemporary',
+                description: 'Contemporary three-seat sofa in beige-tan fabric with button tufting, ruffled skirt, three back cushions. Classic proportions, rolled arms.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/5997d8ce-2a59-4859-939b-5bc928da7cc0',
+                priorInstallLocation: 'Formal Living Room',
+                dimensions: '84"W x 36"D x 34"H',
+                finish: 'Camel-colored fabric with button tufting',
+                locationInWarehouse: 'Section H, Row 1, Large Furniture',
+                additionalDetails: 'Three seat cushions and three back cushions. Professionally cleaned.'
+            },
+            {
+                id: 12,
+                title: 'Painted Console Cabinet',
+                category: 'Storage',
+                era: 'Vintage',
+                description: 'Ornate painted console with gilded decoration, two drawers, two cabinet doors with scrollwork. Turquoise-blue top edge, wrought iron hardware.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/9224c35b-b10b-40fd-b9a4-1a83893a9619',
+                priorInstallLocation: 'Entryway',
+                dimensions: '54"W x 18"D x 36"H',
+                finish: 'Hand-painted with gilded accents and turquoise trim',
+                locationInWarehouse: 'Section B, Row 4, Shelf 2',
+                additionalDetails: 'Original wrought iron hardware. Decorative piece with functional storage.'
+            },
+            {
+                id: 13,
+                title: 'Mongiardo Studio Selenite Bedside Tables',
+                category: 'Tables',
+                era: 'Contemporary',
+                description: 'Pair of modern bedside tables with white-washed wood, marble top, brass hardware, gold base. Clean lines for contemporary bedrooms.',
+                image: 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/bc94096d-9229-4b59-aa3d-3642af3855bf',
+                priorInstallLocation: 'Master Bedroom',
+                dimensions: '20"W x 16"D x 24"H (each)',
+                finish: 'White-washed wood with marble top and brass details',
+                locationInWarehouse: 'Section C, Row 3, Table Pair',
+                additionalDetails: 'Sold as matching pair. Marble tops in pristine condition. Designer piece.'
+            }
+        ];
+
+        const categories = ['All', ...new Set(items.map(item => item.category))];
+        let currentCategory = 'All';
+        let currentZoom = 1;
+
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            modal.classList.add('active');
+            currentZoom = 1;
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function closeModal(event) {
+            if (event.target.id === 'imageModal' || event.target.className === 'modal-close') {
+                const modal = document.getElementById('imageModal');
+                modal.classList.remove('active');
+            }
+        }
+
+        function zoomIn() {
+            const modalImage = document.getElementById('modalImage');
+            currentZoom = Math.min(currentZoom + 0.25, 3);
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function zoomOut() {
+            const modalImage = document.getElementById('modalImage');
+            currentZoom = Math.max(currentZoom - 0.25, 0.5);
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function resetZoom() {
+            const modalImage = document.getElementById('modalImage');
+            currentZoom = 1;
+            modalImage.style.transform = `scale(${currentZoom})`;
+        }
+
+        function setDecision(itemId, decision) {
+            if (!currentUser) {
+                alert('Please enter your name before making decisions.');
+                return;
+            }
+            
+            decisions[itemId] = {
+                decision: decision,
+                decidedBy: currentUser,
+                timestamp: new Date().toISOString()
+            };
+            renderGallery();
+            renderResultsTable();
+        }
+
+        function renderResultsTable() {
+            let tableContainer = document.getElementById('resultsTable');
+            if (!tableContainer) {
+                tableContainer = document.createElement('div');
+                tableContainer.id = 'resultsTable';
+                tableContainer.className = 'results-table';
+                document.querySelector('.container').appendChild(tableContainer);
+            }
+
+            const decidedItems = items.filter(item => decisions[item.id]);
+            
+            if (decidedItems.length === 0) {
+                tableContainer.innerHTML = '';
+                return;
+            }
+
+            let tableHTML = `
+                <h2 style="color: var(--color-text-accent); margin-bottom: 1rem;">Decision Summary</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            decidedItems.forEach(item => {
+                const decisionData = decisions[item.id];
+                const decision = decisionData.decision;
+                const badgeClass = decision === 'Store It' ? 'decision-store' : 
+                                  decision === 'Donate or Throw It' ? 'decision-donate' : 
+                                  'decision-consign';
+                tableHTML += `
+                    <tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${item.category}</td>
+                        <td>
+                            <span class="decision-badge ${badgeClass}">${decision}</span>
+                            <div class="decision-by">By: ${decisionData.decidedBy}</div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        function renderTabs() {
+            const tabsContainer = document.getElementById('tabs');
+            tabsContainer.innerHTML = '';
+            
+            categories.forEach(category => {
+                const tab = document.createElement('button');
+                tab.className = 'tab' + (category === currentCategory ? ' active' : '');
+                tab.textContent = category;
+                tab.onclick = () => filterByCategory(category);
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function filterByCategory(category) {
+            currentCategory = category;
+            renderTabs();
+            renderGallery();
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            const filteredItems = currentCategory === 'All' 
+                ? items 
+                : items.filter(item => item.category === currentCategory);
+
+            filteredItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                const decisionData = decisions[item.id];
+                const currentDecision = decisionData ? decisionData.decision : null;
+                const decidedBy = decisionData ? decisionData.decidedBy : null;
+                
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="card-image" onclick="openImageModal('${item.image}')">
+                    <div class="card-content">
+                        <span class="category-badge">${item.category} • ${item.era}</span>
+                        <h2 class="card-title">${item.title}</h2>
+                        ${decidedBy ? `<div class="decision-by">Last decided by: ${decidedBy}</div>` : ''}
+                        <div class="action-buttons">
+                            <button class="action-btn ${currentDecision === 'Store It' ? 'selected' : ''}" 
+                                    onclick="setDecision(${item.id}, 'Store It')">
+                                Store It
+                            </button>
+                            <button class="action-btn ${currentDecision === 'Donate or Throw It' ? 'selected' : ''}" 
+                                    onclick="setDecision(${item.id}, 'Donate or Throw It')">
+                                Donate or Throw It
+                            </button>
+                            <button class="action-btn ${currentDecision === 'Consign It' ? 'selected' : ''}" 
+                                    onclick="setDecision(${item.id}, 'Consign It')">
+                                Consign It
+                            </button>
+                        </div>
+                        <textarea class="text-field" placeholder="Add your notes here..." id="notes-${item.id}">${item.description}</textarea>
+                        <div class="card-description" style="margin-top: 1rem;">
+                            <strong>Prior Install Location:</strong> ${item.priorInstallLocation || 'Not specified'}<br>
+                            <strong>Dimensions:</strong> ${item.dimensions || 'Not specified'}<br>
+                            <strong>Finish:</strong> ${item.finish || 'Not specified'}<br>
+                            <strong>Location in Warehouse:</strong> ${item.locationInWarehouse || 'Not specified'}<br>
+                            <strong>Additional Details:</strong> ${item.additionalDetails || 'Not specified'}
+                        </div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        renderTabs();
+        renderGallery();
+    </script>
+</body>
+</html>
